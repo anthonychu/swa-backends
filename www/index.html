@@ -1,0 +1,76 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello world</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        pre {
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: large;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="https://unpkg.com/vue@3"></script>
+
+    <div id="app">
+        <h1>Hello!</h1>
+        <div v-if="isReady">
+            <div v-if="isLoggedIn">
+                <div>You're logged in! (<a href="/.auth/logout">Log out</a>)</div>
+            </div>
+            <div v-else>
+                <div>You're not logged in! (<a href="/.auth/login/github">Log in</a>)</div>
+            </div>
+
+            <div>
+                <h2>Call API</h2>
+                <button v-on:click="callApi('anonymous')">Call /api/hello/anonymous</button>
+                <button v-on:click="callApi('authenticated')">Call /api/hello/authenticated</button>
+                <h3 v-if="response">API result</h3>
+                <pre>{{ response }}</pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue
+
+        createApp({
+            data() {
+                return {
+                    isReady: false,
+                    isLoggedIn: false,
+                    response: '',
+                }
+            },
+            async mounted() {
+                this.isReady = true
+                const response = await fetch('/.auth/me')
+                const user = await response.json()
+                this.isLoggedIn = !!user.clientPrincipal
+            },
+            methods: {
+                callApi(type) {
+                    const url = `/api/hello/${type}`
+                    return fetch(url)
+                        .then(async res => {
+                            if (res.ok) {
+                                this.response = await res.text()
+                            } else {
+                                this.response = `Error: ${res.status}`
+                            }
+                        })
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>
